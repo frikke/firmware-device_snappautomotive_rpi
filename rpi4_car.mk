@@ -14,20 +14,24 @@
 # limitations under the License.
 #
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
-USE_OEM_TV_APP := true
-$(call inherit-product, device/google/atv/products/atv_base.mk)
+DEVICE_IS_64BIT_ONLY := true
 
-PRODUCT_NAME := rpi4
-PRODUCT_DEVICE := rpi4
-PRODUCT_BRAND := arpi
-PRODUCT_MANUFACTURER := ARPi
+$(call inherit-product, device/snappautomotive/common/additions.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
+$(call inherit-product, packages/services/Car/car_product/build/car.mk)
+
+PRODUCT_NAME := rpi4_car
+PRODUCT_DEVICE := rpi4_car
+PRODUCT_BRAND := SnappAutomotive
+PRODUCT_MANUFACTURER := Snapp Automotive and ARPi
 PRODUCT_MODEL := Raspberry Pi 4
 
 include frameworks/native/build/tablet-10in-xhdpi-2048-dalvik-heap.mk
 
+# PRODUCT_SUPPORTS_CAMERA := false
+
 PRODUCT_PROPERTY_OVERRIDES += \
-    debug.drm.mode.force=1280x720 \
+    debug.drm.mode.force=1280x800 \
     gralloc.drm.kms=/dev/dri/card0 \
     ro.opengles.version=196609 \
     ro.hardware.vulkan=broadcom \
@@ -35,14 +39,15 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.rfkilldisabled=1
 
 # application packages
-PRODUCT_PACKAGES += \
-    TvSettingsTwoPanel \
-    DeskClock \
-    RpLauncher
+# PRODUCT_PACKAGES += \
+#    TvSettingsTwoPanel \
+#    DeskClock \
+#    RpLauncher
 
 # overlay packages
 PRODUCT_PACKAGES += \
-    RpFrameworkOverlay
+    RpCarFrameworkOverlay \
+    CarConnectivityOverlay
 
 # system packages
 PRODUCT_PACKAGES += \
@@ -57,7 +62,8 @@ PRODUCT_PACKAGES += \
     wpa_supplicant \
     wpa_supplicant.conf \
     hostapd \
-    libbt-vendor
+    libbt-vendor \
+    libaptxhd_enc
 
 # graphics hal
 PRODUCT_PACKAGES += \
@@ -73,6 +79,7 @@ PRODUCT_PACKAGES += \
     android.hardware.graphics.mapper@2.0-impl.rpi4 \
     android.hardware.graphics.composer@2.1-service.rpi4 \
     android.hardware.camera.provider@2.5-external-service \
+    android.hardware.audio@2.0-impl \
     android.hardware.audio@4.0-impl \
     android.hardware.audio.effect@4.0-impl \
     android.hardware.audio.service \
@@ -90,6 +97,34 @@ PRODUCT_PACKAGES += \
     android.hardware.configstore@1.1-service \
     android.hardware.tv.cec@1.0-service.mock \
     vndservicemanager
+
+# Auto modules
+PRODUCT_PACKAGES += \
+            android.hardware.broadcastradio@2.0-service \
+            android.hardware.automotive.vehicle@2.0-default-service \
+            CarServiceUpdatableNonModule
+
+# Car init.rc
+PRODUCT_COPY_FILES += \
+            packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
+            packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
+
+# Enable landscape
+PRODUCT_COPY_FILES += \
+            frameworks/native/data/etc/android.hardware.screen.landscape.xml:system/etc/permissions/android.hardware.screen.landscape.xml
+
+# Used to embed a map in an activity view
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.software.activities_on_secondary_displays.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.activities_on_secondary_displays.xml
+
+# broadcast radio feature
+PRODUCT_COPY_FILES += \
+        frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml
+
+TARGET_USES_CAR_FUTURE_FEATURES := true
+
+# Include EVS reference implementations
+ENABLE_EVS_SAMPLE := true
 
 # system configurations
 PRODUCT_COPY_FILES := \
@@ -146,7 +181,31 @@ PRODUCT_COPY_FILES := \
     frameworks/base/data/sounds/effects/ogg/camera_click_48k.ogg:$(TARGET_COPY_OUT_PRODUCT)/media/audio/ui/camera_click.ogg \
     $(PRODUCT_COPY_FILES)
 
-PRODUCT_AAPT_PREF_CONFIG := tvdpi
-PRODUCT_CHARACTERISTICS := tv
+# Additional permissions
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
+    frameworks/native/data/etc/android.hardware.broadcastradio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.broadcastradio.xml \
+    frameworks/native/data/etc/android.hardware.type.automotive.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.type.automotive.xml
+
+PRODUCT_CHARACTERISTICS := automotive
+
+# These are things from atv_base, which android-rpi is based on, 
+# that aren't in automotive builds.
+
+$(call inherit-product-if-exists, frameworks/base/data/fonts/fonts.mk)
+$(call inherit-product-if-exists, external/google-fonts/dancing-script/fonts.mk)
+$(call inherit-product-if-exists, external/google-fonts/carrois-gothic-sc/fonts.mk)
+$(call inherit-product-if-exists, external/google-fonts/coming-soon/fonts.mk)
+$(call inherit-product-if-exists, external/google-fonts/cutive-mono/fonts.mk)
+$(call inherit-product-if-exists, external/noto-fonts/fonts.mk)
+$(call inherit-product-if-exists, external/roboto-fonts/fonts.mk)
+$(call inherit-product-if-exists, external/hyphenation-patterns/patterns.mk)
+$(call inherit-product-if-exists, frameworks/base/data/keyboards/keyboards.mk)
+$(call inherit-product-if-exists, frameworks/webview/chromium/chromium.mk)
+
+PRODUCT_PACKAGES += \
+    librs_jni \
+    cameraserver
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
