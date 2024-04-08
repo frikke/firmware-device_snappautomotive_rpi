@@ -22,7 +22,7 @@
  Partitions of the card should be set-up like followings.
   p1  128MB for boot : Do fdisk, set W95 FAT32(LBA) & Bootable type, mkfs.vfat
   p2 2048MB for /system : Do fdisk, new primary partition
-  p3  128MB for /vendor : Do fdisk, new primary partition
+  p3 1024MB for /vendor : Do fdisk, new primary partition
   p4 remainings for /data : Do fdisk, mkfs.ext4
  Set volume label of /data partition as userdata
   : use -L option for mkfs.ext4
@@ -33,8 +33,8 @@
   $ sudo dd if=vendor.img of=/dev/<p3> bs=1M
 
 # Copy firmware & ramdisk to boot partition
-  device/snappautomotive/rpi4/boot/* to p1:/
-  out/target/product/rpi4/ramdisk.img to p1:/
+  device/snappautomotive/rpi4_car/boot/* to p1:/
+  out/target/product/rpi4_car/ramdisk.img to p1:/
 
 
 # Download & Build kernel source
